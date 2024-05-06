@@ -1,9 +1,11 @@
 # imgtools.py
 
 import os
+import shutil
 from pathlib import Path
 from imgtool_args import ImgToolArgs
 from tempfile import NamedTemporaryFile
+
 
 
 def parse_hexadecimal(value):
@@ -65,7 +67,7 @@ def append_to_file(base_path, append_path, output_path, offset, imgtool_args):
         file_out.write(PAD_BYTE * alignment_padding)
 
     # Replace the original file with the temporary file
-    os.replace(temp_path, output_path)
+    shutil.move(temp_path, output_path)
 
     if imgtool_args.verbose:
         print(f"Appended {append_path} to {base_path} at offset {offset}(0x{offset:x}), aligned to {imgtool_args.align}-byte boundary. Final size: {final_size + alignment_padding}(0x{(final_size + alignment_padding):x}) bytes.")
@@ -97,7 +99,7 @@ def merge_files(base_path, insert_path, output_path, merge_offset, imgtool_args)
         file_out.write(PAD_BYTE * alignment_padding)
 
     # Replace the original file with the temporary file
-    os.replace(temp_path, output_path)
+    shutil.move(temp_path, output_path)
 
     if imgtool_args.verbose:
         print(f"Merged {insert_path} into {base_path} at offset {merge_offset}(0x{merge_offset:x}). Final size: {final_size + alignment_padding}(0x{(final_size + alignment_padding):x}) bytes.")
@@ -136,7 +138,7 @@ def replace_file(base_path, replace_path, output_path, replace_offset, imgtool_a
         file_out.write(PAD_BYTE * alignment_padding)
 
     # Replace the original file with the temporary file
-    os.replace(temp_file_path, output_path)
+    shutil.move(temp_file_path, output_path)
 
     if imgtool_args.verbose:
         print(f"Replaced {base_path} with {replace_path} starting from offset {replace_offset}(0x{replace_offset:x}). Final size: {final_size + alignment_padding}(0x{(final_size + alignment_padding):x}) bytes.")
