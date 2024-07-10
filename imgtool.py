@@ -5,7 +5,16 @@ import shutil
 from pathlib import Path
 from imgtool_args import ImgToolArgs
 from tempfile import NamedTemporaryFile
+import struct
+import zlib
 
+# Sign mode related values
+SIGN_CRC = "crc"
+SIGN_CHECKSUM = "checksum"
+SIGN_RSA_2048 = "rsa2048"
+SIGN_RSA_3072 = "rsa3072"
+SIGN_SIGN_OFF = "off"
+SIGN_RESERVED_VALUE = 0
 
 
 def parse_hexadecimal(value):
@@ -144,17 +153,67 @@ def replace_file(base_path, replace_path, output_path, replace_offset, imgtool_a
         print(f"Replaced {base_path} with {replace_path} starting from offset {replace_offset}(0x{replace_offset:x}). Final size: {final_size + alignment_padding}(0x{(final_size + alignment_padding):x}) bytes.")
 
 
+
+def calculate_crc32(data):
+    """Calculate CRC32 of the given data."""
+    return zlib.crc32(data) & 0xFFFFFFFF
+
+def calculate_checksum(data):
+    """Calculate simple checksum of the given data."""
+    return sum(data) & 0xFFFFFFFF
+
+def sign_file(input_path, output_path, signature_type, imgtool_args):
+    """Calculate signature for input file and optionally write signed file."""
+    with open(input_path, 'rb') as file:
+        data = file.read()
+
+    if signature_type.lower() == 'crc':
+        signature = calculate_crc32(data)
+        signature_name = "CRC32"
+    elif signature_type.lower() == 'checksum':
+        signature = calculate_checksum(data)
+        signature_name = "Checksum"
+    else:
+        raise ValueError(f"Unsupported signature type: {signature_type}")
+
+    print(f"File: {input_path}")
+    print(f"Signature type: {signature_name}")
+    print(f"Signature value: 0x{signature:08X}")
+
+    if output_path:
+        with open(output_path, 'wb') as file:
+            file.write(data)
+            file.write(struct.pack('<I', signature))  # Append 4-byte signature in little-endian format
+
+        if imgtool_args.verbose:
+            print(f"Signed file written to: {output_path}")
+            print(f"Original size: {len(data)} bytes")
+            print(f"Final size: {len(data) + 4} bytes")
+
+
 def main():
     args = ImgToolArgs().parse_args()
 
     if args.resize:
         resize_binary_file(args.resize[0], args.resize[1], args.resize[2], args)
-    if args.append:
+    elif args.append:
         append_to_file(args.append[0], args.append[1], args.append[2], args.append[3], args)
-    if args.merge:
+    elif args.merge:
         merge_files(args.merge[0], args.merge[1], args.merge[2], args.merge[3], args)
-    if args.replace:
+    elif args.replace:
         replace_file(args.replace[0], args.replace[1], args.replace[2], args.replace[3], args)
+    elif args.sign:
+        if len(args.sign) < 2 or len(args.sign) > 3:
+            print("Invalid number of arguments for --sign option.")
+            print("Usage: --sign INPUT_FILE SIGNATURE_TYPE [OUTPUT_FILE]")
+            return
+
+        input_file = args.sign[0]
+        signature_type = args.sign[1]
+        output_file = args.sign[2] if len(args.sign) == 3 else None
+
+        sign_file(input_file, output_file, signature_type, args)
+
 
 
 if __name__ == '__main__':
