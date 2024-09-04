@@ -162,33 +162,39 @@ def calculate_checksum(data):
     """Calculate simple checksum of the given data."""
     return sum(data) & 0xFFFFFFFF
 
-def sign_file(input_path, output_path, signature_type, imgtool_args):
-    """Calculate signature for input file and optionally write signed file."""
+def sign_file(input_path, signature_type, opt_append, imgtool_args):
     with open(input_path, 'rb') as file:
         data = file.read()
 
-    if signature_type.lower() == 'crc':
-        signature = calculate_crc32(data)
-        signature_name = "CRC32"
-    elif signature_type.lower() == 'checksum':
-        signature = calculate_checksum(data)
-        signature_name = "Checksum"
+    signatures = {}
+    if signature_type.lower() == 'all':
+        signatures['crc32'] = calculate_crc32(data)
+        signatures['byte(x8)'] = calculate_checksum(data)  # Assuming checksum returns byte(x8) checksum
+    elif signature_type.lower() == 'crc32':
+        signatures['crc32'] = calculate_crc32(data)
+    elif signature_type.lower() == 'byte':
+        signatures['byte(x8)'] = calculate_checksum(data)
     else:
         raise ValueError(f"Unsupported signature type: {signature_type}")
 
-    print(f"File: {input_path}")
-    print(f"Signature type: {signature_name}")
-    print(f"Signature value: 0x{signature:08X}")
+    for sig_type, sig_value in signatures.items():
+        signature_name = sig_type.upper()
+        signature_bytes = struct.pack('<I', sig_value)  # Adjust format as necessary
 
-    if output_path:
-        with open(output_path, 'wb') as file:
-            file.write(data)
-            file.write(struct.pack('<I', signature))  # Append 4-byte signature in little-endian format
+
+        if str(opt_append).lower() == 'append':
+            base_name, ext = os.path.splitext(input_path)
+            modified_output_path = f"{base_name}_{sig_type}{ext}"
+            with open(modified_output_path, 'wb') as file:
+                file.write(data)
+                file.write(signature_bytes)  # Append 4-byte signature in little-endian format
 
         if imgtool_args.verbose:
-            print(f"Signed file written to: {output_path}")
-            print(f"Original size: {len(data)} bytes")
-            print(f"Final size: {len(data) + 4} bytes")
+            print(f"Signature value for {signature_name}: 0x{sig_value:08X}")
+            if opt_append:
+                print(f"Signed file written to: {modified_output_path}")
+                print(f"Original size: {len(data)} bytes: {hex(len(data))}")
+                print(f"Final size: {len(data) + 4} bytes {hex(len(data)+4)}")
 
 
 def main():
@@ -205,14 +211,15 @@ def main():
     elif args.sign:
         if len(args.sign) < 2 or len(args.sign) > 3:
             print("Invalid number of arguments for --sign option.")
-            print("Usage: --sign INPUT_FILE SIGNATURE_TYPE [OUTPUT_FILE]")
+            print("Usage: --sign INPUT_FILE SIGNATURE_TYPE [append]")
+            print("Supported SIGNATURE_TYPE: byte(x8), crc32")
             return
 
         input_file = args.sign[0]
         signature_type = args.sign[1]
-        output_file = args.sign[2] if len(args.sign) == 3 else None
+        opt_append = args.sign[2] if len(args.sign) == 3 else None
 
-        sign_file(input_file, output_file, signature_type, args)
+        sign_file(input_file, signature_type, opt_append, args)
 
 
 

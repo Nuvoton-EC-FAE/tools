@@ -28,8 +28,9 @@ options:
   --append        Append file B to file A at a specified offset.
   --merge         Merge file B into file A at a specified offset.
   --replace       Replace the content of file A with file B starting at a specified offset.
-  --sign          Calculate signature (CRC/CHECKSUM) for input file. Usage: --sign INPUT_FILE SIGNATURE_TYPE [OUTPUT_FILE] If
-                  OUTPUT_FILE is provided, write the signed file.
+  --sign          Calculate signature (BYTE(x8)/CRC32) for input file.
+                  Usage: --sign INPUT_FILE SIGNATURE_TYPE [append].
+                  Option: If "append" is provided, append the signed to the file.
   -v, --verbose   Enable verbose output for debugging.
   -a, --align     Alignment value (default: 16 bytes).
   -c, --pad_byte  Padding byte (default: 0x00).

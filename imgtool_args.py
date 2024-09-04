@@ -29,9 +29,9 @@ class ImgToolArgs:
                              help='Replace the content of file A with file B starting at a specified offset.')
 
         self.parser.add_argument('--sign', nargs='+', metavar='ARG',
-                                 help='Calculate signature (CRC/CHECKSUM) for input file.\n'
-                                      'Usage: --sign INPUT_FILE SIGNATURE_TYPE [OUTPUT_FILE]\n'
-                                      'If OUTPUT_FILE is provided, write the signed file.')
+                                 help='Calculate signature (BYTE(x8)/CRC32) for input file.\n'
+                                      'Usage: --sign INPUT_FILE SIGNATURE_TYPE [append].\n'
+                                      'Option: If append is provided, append the signed to the file.')
 
 
 
