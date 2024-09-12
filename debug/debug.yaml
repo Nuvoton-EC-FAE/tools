@@ -1,0 +1,3 @@
+CONFIG:
+  ZEPHYR_BASE_PATH: "/home/runner/work/zephyr/zephyr"
+  ZEPHYR_SDK_PATH: "/opt/zephyr-sdk"
