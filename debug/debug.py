@@ -127,6 +127,8 @@ def main():
         output_file = f"{base_name}_final{ext}"
 
     analyze_coredump(input_file, output_file, args.verbose)
+    # TODO: Add automated offline debugging by launching GDB and GDBServer from the configuration.
+
 
 if __name__ == "__main__":
     main()
