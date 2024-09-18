@@ -49,8 +49,8 @@ def convert_prj_to_header(prj_conf_path, output_header_path, debug=False):
             # Write header guards and initial macros
             header_file.write("#ifndef _PRJ2HEADER_H_\n")
             header_file.write("#define _PRJ2HEADER_H_\n\n")
-            header_file.write("#define ENABLE TRUE\n")
-            header_file.write("#define DISABLE FALSE\n\n")
+            header_file.write("#define ENABLE 1\n")
+            header_file.write("#define DISABLE 0\n\n")
 
             # Process each line in the prj.conf file
             for line in prj_conf_file:
